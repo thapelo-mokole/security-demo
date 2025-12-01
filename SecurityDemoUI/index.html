@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Demo - Insecure vs Secure</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem; text-align: center; }
+        .header h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
+        .header p { font-size: 1.1rem; opacity: 0.9; }
+        .container { max-width: 1400px; margin: 2rem auto; padding: 0 1rem; }
+        .comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem; }
+        .panel { background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden; }
+        .panel-header { padding: 1.5rem; font-weight: bold; font-size: 1.3rem; }
+        .insecure-header { background: #ff4444; color: white; }
+        .secure-header { background: #00C851; color: white; }
+        .panel-body { padding: 1.5rem; }
+        .test-section { margin-bottom: 2rem; border-bottom: 1px solid #eee; padding-bottom: 1.5rem; }
+        .test-section:last-child { border-bottom: none; }
+        .test-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem; color: #333; }
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: #555; }
+        input, textarea { width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.95rem; }
+        button { background: #667eea; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer; font-size: 1rem; font-weight: 500; }
+        button:hover { background: #5568d3; }
+        .insecure button { background: #ff4444; }
+        .insecure button:hover { background: #cc0000; }
+        .secure button { background: #00C851; }
+        .secure button:hover { background: #007E33; }
+        .result { margin-top: 1rem; padding: 1rem; border-radius: 4px; font-size: 0.9rem; }
+        .result-success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .result-error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .result-warning { background: #fff3cd; border: 1px solid #ffeaa7; color: #856404; }
+        .vulnerability-badge { display: inline-block; background: #ff4444; color: white; padding: 0.25rem 0.5rem; border-radius: 3px; font-size: 0.75rem; margin-left: 0.5rem; }
+        .protection-badge { display: inline-block; background: #00C851; color: white; padding: 0.25rem 0.5rem; border-radius: 3px; font-size: 0.75rem; margin-left: 0.5rem; }
+        .code-block { background: #2d2d2d; color: #f8f8f2; padding: 1rem; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 0.85rem; overflow-x: auto; margin-top: 0.5rem; }
+        .info-box { background: #e7f3ff; border-left: 4px solid #2196F3; padding: 1rem; margin-top: 1rem; border-radius: 4px; }
+        .token-display { background: #f8f9fa; padding: 0.5rem; border-radius: 4px; word-break: break-all; font-size: 0.8rem; margin-top: 0.5rem; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔒 Security Demo: Insecure vs Secure</h1>
+        <p>Live demonstration of security vulnerabilities and their mitigations</p>
+    </div>
+
+    <div class="container">
+        <div class="comparison">
+            <!-- INSECURE APP -->
+            <div class="panel insecure">
+                <div class="panel-header insecure-header">
+                    ❌ InsecureApp (Port 5001)
+                </div>
+                <div class="panel-body">
+                    <!-- SQL Injection Test -->
+                    <div class="test-section">
+                        <div class="test-title">1. SQL Injection Attack <span class="vulnerability-badge">VULNERABLE</span></div>
+                        <div class="form-group">
+                            <label>Username (Try: admin' OR '1'='1)</label>
+                            <input type="text" id="insecure-sql-username" value="admin' OR '1'='1">
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label>
+                            <input type="password" id="insecure-sql-password" value="password123">
+                        </div>
+                        <button onclick="testInsecureSQLInjection()">Test SQL Injection</button>
+                        <div id="insecure-sql-result"></div>
+                        <div class="info-box">
+                            <strong>Vulnerability:</strong> String concatenation in SQL queries allows attackers to inject malicious SQL code.
+                            <div class="code-block">var query = $"SELECT * FROM Users WHERE Username = '{username}'";</div>
+                        </div>
+                    </div>
+
+                    <!-- No Authentication -->
+                    <div class="test-section">
+                        <div class="test-title">2. No Authentication <span class="vulnerability-badge">VULNERABLE</span></div>
+                        <button onclick="testInsecureNoAuth()">Access All Users (No Auth Required)</button>
+                        <div id="insecure-noauth-result"></div>
+                        <div class="info-box">
+                            <strong>Vulnerability:</strong> Endpoints accessible without any authentication. Anyone can access sensitive data.
+                        </div>
+                    </div>
+
+                    <!-- Plaintext Passwords -->
+                    <div class="test-section">
+                        <div class="test-title">3. Plaintext Password Storage <span class="vulnerability-badge">VULNERABLE</span></div>
+                        <div class="form-group">
+                            <label>Username</label>
+                            <input type="text" id="insecure-register-username" value="testuser123">
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="insecure-register-email" value="test@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label>
+                            <input type="password" id="insecure-register-password" value="password123">
+                        </div>
+                        <button onclick="testInsecureRegister()">Register User</button>
+                        <div id="insecure-register-result"></div>
+                        <div class="info-box">
+                            <strong>Vulnerability:</strong> Passwords stored in plaintext. Database breach = complete credential compromise.
+                        </div>
+                    </div>
+
+                    <!-- Information Disclosure -->
+                    <div class="test-section">
+                        <div class="test-title">4. Information Disclosure <span class="vulnerability-badge">VULNERABLE</span></div>
+                        <button onclick="testInsecureSensitiveData()">Access Sensitive Data (No Auth)</button>
+                        <div id="insecure-sensitive-result"></div>
+                        <div class="info-box">
+                            <strong>Vulnerability:</strong> Detailed error messages and sensitive data exposed to unauthorized users.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECURE APP -->
+            <div class="panel secure">
+                <div class="panel-header secure-header">
+                    ✅ SecureApp (Port 5002)
+                </div>
+                <div class="panel-body">
+                    <!-- SQL Injection Protection -->
+                    <div class="test-section">
+                        <div class="test-title">1. SQL Injection Protection <span class="protection-badge">PROTECTED</span></div>
+                        <div class="form-group">
+                            <label>Username (Try: admin' OR '1'='1)</label>
+                            <input type="text" id="secure-sql-username" value="secureadmin' OR '1'='1">
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label>
+                            <input type="password" id="secure-sql-password" value="anything">
+                        </div>
+                        <button onclick="testSecureSQLInjection()">Test SQL Injection (Will Fail)</button>
+                        <div id="secure-sql-result"></div>
+                        <div class="info-box">
+                            <strong>Protection:</strong> Parameterized queries prevent SQL injection attacks.
+                            <div class="code-block">command.Parameters.AddWithValue("Username", username);</div>
+                        </div>
+                    </div>
+
+                    <!-- JWT Authentication -->
+                    <div class="test-section">
+                        <div class="test-title">2. JWT Authentication <span class="protection-badge">PROTECTED</span></div>
+                        <div class="form-group">
+                            <label>Username</label>
+                            <input type="text" id="secure-login-username" value="secureuser">
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label>
+                            <input type="password" id="secure-login-password" value="password123">
+                        </div>
+                        <button onclick="testSecureLogin()">Login & Get JWT Token</button>
+                        <div id="secure-login-result"></div>
+                        <div class="info-box">
+                            <strong>Protection:</strong> JWT-based authentication with role-based access control (RBAC).
+                        </div>
+                    </div>
+
+                    <!-- Password Hashing -->
+                    <div class="test-section">
+                        <div class="test-title">3. BCrypt Password Hashing <span class="protection-badge">PROTECTED</span></div>
+                        <div class="form-group">
+                            <label>Username</label>
+                            <input type="text" id="secure-register-username" value="secureuser456">
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="secure-register-email" value="secure@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label>Password (min 8 chars, uppercase, lowercase, digit, special)</label>
+                            <input type="password" id="secure-register-password" value="SecurePass123!">
+                        </div>
+                        <button onclick="testSecureRegister()">Register User</button>
+                        <div id="secure-register-result"></div>
+                        <div class="info-box">
+                            <strong>Protection:</strong> BCrypt hashing with salt + input validation prevents weak passwords.
+                        </div>
+                    </div>
+
+                    <!-- Authorization -->
+                    <div class="test-section">
+                        <div class="test-title">4. Authorization & Access Control <span class="protection-badge">PROTECTED</span></div>
+                        <button onclick="testSecureNoAuth()">Try Access Without Token (Will Fail)</button>
+                        <button onclick="testSecureWithAuth()" style="margin-left: 0.5rem;">Access With Valid Token</button>
+                        <div id="secure-auth-result"></div>
+                        <div class="info-box">
+                            <strong>Protection:</strong> All endpoints require valid JWT token. Admin endpoints require admin role.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let secureToken = '';
+        const INSECURE_API = 'https://localhost:5001/api';
+        const SECURE_API = 'https://localhost:5002/api';
+
+        function showResult(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="result result-${type}">${message}</div>`;
+        }
+
+        // INSECURE APP TESTS
+        async function testInsecureSQLInjection() {
+            const username = document.getElementById('insecure-sql-username').value;
+            const password = document.getElementById('insecure-sql-password').value;
+            
+            try {
+                const response = await fetch(`${INSECURE_API}/users/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult('insecure-sql-result', 
+                        `<strong>⚠️ SQL INJECTION SUCCESSFUL!</strong><br>
+                        Bypassed authentication with malicious input.<br>
+                        User data: ${JSON.stringify(data.user, null, 2)}`, 
+                        'warning');
+                } else {
+                    showResult('insecure-sql-result', `Failed: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showResult('insecure-sql-result', `Error: ${error.message}. Make sure InsecureApp is running on port 5001.`, 'error');
+            }
+        }
+
+        async function testInsecureNoAuth() {
+            try {
+                const response = await fetch(`${INSECURE_API}/users`);
+                const data = await response.json();
+                
+                showResult('insecure-noauth-result', 
+                    `<strong>⚠️ NO AUTHENTICATION REQUIRED!</strong><br>
+                    Retrieved ${data.length} users without any authentication.<br>
+                    Passwords exposed: ${data.map(u => u.username + ':' + u.password).join(', ')}`, 
+                    'warning');
+            } catch (error) {
+                showResult('insecure-noauth-result', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testInsecureRegister() {
+            const username = document.getElementById('insecure-register-username').value;
+            const email = document.getElementById('insecure-register-email').value;
+            const password = document.getElementById('insecure-register-password').value;
+            
+            try {
+                const response = await fetch(`${INSECURE_API}/users/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email, password, role: 'User' })
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult('insecure-register-result', 
+                        `<strong>⚠️ PASSWORD STORED IN PLAINTEXT!</strong><br>
+                        User created with ID: ${data.userId}<br>
+                        Password "${password}" stored without hashing.`, 
+                        'warning');
+                } else {
+                    showResult('insecure-register-result', `Failed: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showResult('insecure-register-result', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testInsecureSensitiveData() {
+            try {
+                const response = await fetch(`${INSECURE_API}/users/admin/sensitive-data`);
+                const data = await response.json();
+                
+                showResult('insecure-sensitive-result', 
+                    `<strong>⚠️ SENSITIVE DATA EXPOSED!</strong><br>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                    Database credentials and API keys exposed without authentication!`, 
+                    'warning');
+            } catch (error) {
+                showResult('insecure-sensitive-result', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        // SECURE APP TESTS
+        async function testSecureSQLInjection() {
+            const username = document.getElementById('secure-sql-username').value;
+            const password = document.getElementById('secure-sql-password').value;
+            
+            try {
+                const response = await fetch(`${SECURE_API}/users/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    showResult('secure-sql-result', 
+                        `<strong>✅ SQL INJECTION BLOCKED!</strong><br>
+                        Parameterized queries prevented the attack.<br>
+                        Response: ${data.message}`, 
+                        'success');
+                } else {
+                    showResult('secure-sql-result', `Unexpected success: ${JSON.stringify(data)}`, 'error');
+                }
+            } catch (error) {
+                showResult('secure-sql-result', `Error: ${error.message}. Make sure SecureApp is running on port 5002.`, 'error');
+            }
+        }
+
+        async function testSecureLogin() {
+            const username = document.getElementById('secure-login-username').value;
+            const password = document.getElementById('secure-login-password').value;
+            
+            try {
+                const response = await fetch(`${SECURE_API}/users/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    secureToken = data.token;
+                    showResult('secure-login-result', 
+                        `<strong>✅ LOGIN SUCCESSFUL!</strong><br>
+                        JWT Token received (valid for 1 hour):<br>
+                        <div class="token-display">${data.token}</div>
+                        User: ${data.user.username} (${data.user.role})`, 
+                        'success');
+                } else {
+                    showResult('secure-login-result', `Failed: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showResult('secure-login-result', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testSecureRegister() {
+            const username = document.getElementById('secure-register-username').value;
+            const email = document.getElementById('secure-register-email').value;
+            const password = document.getElementById('secure-register-password').value;
+            
+            try {
+                const response = await fetch(`${SECURE_API}/users/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email, password, role: 'User' })
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult('secure-register-result', 
+                        `<strong>✅ USER REGISTERED SECURELY!</strong><br>
+                        User ID: ${data.userId}<br>
+                        Password hashed with BCrypt (12 rounds)<br>
+                        Input validation passed`, 
+                        'success');
+                } else {
+                    showResult('secure-register-result', 
+                        `<strong>✅ VALIDATION FAILED!</strong><br>
+                        ${data.message}<br>
+                        Input validation is working correctly.`, 
+                        'success');
+                }
+            } catch (error) {
+                showResult('secure-register-result', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testSecureNoAuth() {
+            try {
+                const response = await fetch(`${SECURE_API}/users`);
+                const data = await response.json();
+                
+                if (response.status === 401) {
+                    showResult('secure-auth-result', 
+                        `<strong>✅ AUTHENTICATION REQUIRED!</strong><br>
+                        Access denied without valid JWT token.<br>
+                        Status: 401 Unauthorized`, 
+                        'success');
+                } else {
+                    showResult('secure-auth-result', `Unexpected response: ${JSON.stringify(data)}`, 'error');
+                }
+            } catch (error) {
+                showResult('secure-auth-result', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testSecureWithAuth() {
+            if (!secureToken) {
+                showResult('secure-auth-result', 'Please login first to get a JWT token!', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${SECURE_API}/users/profile`, {
+                    headers: { 'Authorization': `Bearer ${secureToken}` }
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult('secure-auth-result', 
+                        `<strong>✅ AUTHORIZED ACCESS!</strong><br>
+                        Successfully accessed protected endpoint with valid token.<br>
+                        User: ${JSON.stringify(data, null, 2)}`, 
+                        'success');
+                } else {
+                    showResult('secure-auth-result', `Failed: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showResult('secure-auth-result', `Error: ${error.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-using Microsoft.Data.SqlClient;
+using Npgsql;
 using Shared.Domain.Models;
 
 namespace SecureApp.Infrastructure.Repositories;
@@ -22,13 +22,13 @@ public class UserRepository : IUserRepository
     public async Task<User?> GetUserByUsernameAsync(string username)
     {
         // SECURE: Parameterized query prevents SQL injection
-        const string query = "SELECT Id, Username, Email, Password, Role, CreatedAt, IsActive FROM Users WHERE Username = @Username AND IsActive = 1";
+        const string query = "SELECT id, username, email, password, role, createdat, isactive FROM users WHERE username = @username AND isactive = TRUE";
         
         try
         {
-            using var connection = new SqlConnection(ConnectionString);
-            using var command = new SqlCommand(query, connection);
-            command.Parameters.AddWithValue("Username", username);
+            using var connection = new NpgsqlConnection(ConnectionString);
+            using var command = new NpgsqlCommand(query, connection);
+            command.Parameters.AddWithValue("username", username);
             
             await connection.OpenAsync();
             using var reader = await command.ExecuteReaderAsync();
@@ -59,13 +59,13 @@ public class UserRepository : IUserRepository
 
     public async Task<User?> GetUserByIdAsync(int id)
     {
-        const string query = "SELECT Id, Username, Email, Role, CreatedAt, IsActive FROM Users WHERE Id = @Id AND IsActive = 1";
+        const string query = "SELECT id, username, email, role, createdat, isactive FROM users WHERE id = @id AND isactive = TRUE";
         
         try
         {
-            using var connection = new SqlConnection(ConnectionString);
-            using var command = new SqlCommand(query, connection);
-            command.Parameters.AddWithValue("Id", id);
+            using var connection = new NpgsqlConnection(ConnectionString);
+            using var command = new NpgsqlCommand(query, connection);
+            command.Parameters.AddWithValue("id", id);
             
             await connection.OpenAsync();
             using var reader = await command.ExecuteReaderAsync();
@@ -95,19 +95,19 @@ public class UserRepository : IUserRepository
     public async Task<int> CreateUserAsync(CreateUserRequest request, string hashedPassword)
     {
         // SECURE: Parameterized query with hashed password
-        const string query = @"INSERT INTO Users (Username, Email, Password, Role, CreatedAt, IsActive) 
-                              VALUES (@Username, @Email, @Password, @Role, GETDATE(), 1);
-                              SELECT SCOPE_IDENTITY();";
+        const string query = @"INSERT INTO users (username, email, password, role, createdat, isactive) 
+                              VALUES (@username, @email, @password, @role, CURRENT_TIMESTAMP, TRUE)
+                              RETURNING id;";
         
         try
         {
-            using var connection = new SqlConnection(ConnectionString);
-            using var command = new SqlCommand(query, connection);
+            using var connection = new NpgsqlConnection(ConnectionString);
+            using var command = new NpgsqlCommand(query, connection);
             
-            command.Parameters.AddWithValue("Username", request.Username);
-            command.Parameters.AddWithValue("Email", request.Email);
-            command.Parameters.AddWithValue("Password", hashedPassword);
-            command.Parameters.AddWithValue("Role", request.Role);
+            command.Parameters.AddWithValue("username", request.Username);
+            command.Parameters.AddWithValue("email", request.Email);
+            command.Parameters.AddWithValue("password", hashedPassword);
+            command.Parameters.AddWithValue("role", request.Role);
             
             await connection.OpenAsync();
             var result = await command.ExecuteScalarAsync();
@@ -125,13 +125,13 @@ public class UserRepository : IUserRepository
     public async Task<List<User>> GetAllUsersAsync()
     {
         // SECURE: Don't return password field
-        const string query = "SELECT Id, Username, Email, Role, CreatedAt, IsActive FROM Users WHERE IsActive = 1";
+        const string query = "SELECT id, username, email, role, createdat, isactive FROM users WHERE isactive = TRUE";
         var users = new List<User>();
         
         try
         {
-            using var connection = new SqlConnection(ConnectionString);
-            using var command = new SqlCommand(query, connection);
+            using var connection = new NpgsqlConnection(ConnectionString);
+            using var command = new NpgsqlCommand(query, connection);
             
             await connection.OpenAsync();
             using var reader = await command.ExecuteReaderAsync();
@@ -160,16 +160,16 @@ public class UserRepository : IUserRepository
 
     public async Task<bool> UsernameExistsAsync(string username)
     {
-        const string query = "SELECT COUNT(1) FROM Users WHERE Username = @Username";
+        const string query = "SELECT COUNT(1) FROM users WHERE username = @username";
         
         try
         {
-            using var connection = new SqlConnection(ConnectionString);
-            using var command = new SqlCommand(query, connection);
-            command.Parameters.AddWithValue("Username", username);
+            using var connection = new NpgsqlConnection(ConnectionString);
+            using var command = new NpgsqlCommand(query, connection);
+            command.Parameters.AddWithValue("username", username);
             
             await connection.OpenAsync();
-            var count = (int)await command.ExecuteScalarAsync();
+            var count = (long)(await command.ExecuteScalarAsync() ?? 0L);
             return count > 0;
         }
         catch (Exception ex)
@@ -181,16 +181,16 @@ public class UserRepository : IUserRepository
 
     public async Task<bool> EmailExistsAsync(string email)
     {
-        const string query = "SELECT COUNT(1) FROM Users WHERE Email = @Email";
+        const string query = "SELECT COUNT(1) FROM users WHERE email = @email";
         
         try
         {
-            using var connection = new SqlConnection(ConnectionString);
-            using var command = new SqlCommand(query, connection);
-            command.Parameters.AddWithValue("Email", email);
+            using var connection = new NpgsqlConnection(ConnectionString);
+            using var command = new NpgsqlCommand(query, connection);
+            command.Parameters.AddWithValue("email", email);
             
             await connection.OpenAsync();
-            var count = (int)await command.ExecuteScalarAsync();
+            var count = (long)(await command.ExecuteScalarAsync() ?? 0L);
             return count > 0;
         }
         catch (Exception ex)

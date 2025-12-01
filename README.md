@@ -9,6 +9,7 @@ SecurityDemo/
 ├── InsecureApp/          # Demonstrates vulnerable practices
 ├── SecureApp/            # Demonstrates secure practices  
 ├── Shared.Domain/        # Common domain models
+├── SecurityDemoUI/       # Interactive web UI for live demos
 └── README.md            # This documentation
 ```
 
@@ -200,6 +201,25 @@ _logger.LogWarning("Unauthorized access attempt by user {UserId} to user {Target
 - Runtime security monitoring
 - Real-time vulnerability detection
 - Performance impact analysis
+
+## 🖥️ Interactive Demo UI
+
+A live web interface to test vulnerabilities and protections side-by-side!
+
+### Quick Start
+1. Start both applications (see setup below)
+2. Open `SecurityDemoUI/index.html` in your browser
+3. Click buttons to test security features in real-time
+
+### Features
+- ✅ Side-by-side comparison of insecure vs secure implementations
+- ✅ Live SQL injection demonstrations
+- ✅ JWT authentication testing
+- ✅ Password hashing visualization
+- ✅ Authorization bypass attempts
+- ✅ Real-time API responses with explanations
+
+**Perfect for training, demos, and security education!**
 
 ## 🚀 Getting Started
 

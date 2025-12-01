@@ -82,19 +82,59 @@ builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddHealthChecks()
     .AddCheck("database", () => Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy());
 
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy => policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+});
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
-// SECURE: Swagger only in development
-if (builder.Environment.IsDevelopment())
+// Swagger enabled for demo purposes
+builder.Services.AddSwaggerGen(c =>
 {
-    builder.Services.AddSwaggerGen();
-}
+    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo 
+    { 
+        Title = "SecureApp API", 
+        Version = "v1",
+        Description = "Secure implementation with JWT authentication, input validation, and RBAC"
+    });
+    
+    // Add JWT authentication to Swagger
+    c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    {
+        Description = "JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token.",
+        Name = "Authorization",
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
+    
+    c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    {
+        {
+            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            {
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                {
+                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
 
 var app = builder.Build();
 
-// SECURE: Security headers middleware
-app.UseMiddleware<SecurityHeadersMiddleware>();
+// Swagger enabled for demo purposes
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "SecureApp API v1");
+    c.RoutePrefix = string.Empty; // Launch at root
+});
 
 // SECURE: Exception handling middleware
 app.UseMiddleware<ExceptionHandlingMiddleware>();
@@ -102,19 +142,14 @@ app.UseMiddleware<ExceptionHandlingMiddleware>();
 // SECURE: HTTPS redirection
 app.UseHttpsRedirection();
 
+app.UseCors();
+
 // SECURE: Rate limiting
 app.UseIpRateLimiting();
 
 // SECURE: Authentication and authorization
 app.UseAuthentication();
 app.UseAuthorization();
-
-// SECURE: Swagger only in development
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
 
 // SECURE: Health checks endpoint
 app.MapHealthChecks("/health");

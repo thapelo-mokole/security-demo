@@ -24,13 +24,27 @@ public class UserService : IUserService
             var user = await _userRepository.GetUserByUsernameAsync(request.Username);
             
             // SECURE: Constant-time comparison to prevent timing attacks
-            if (user != null && BCrypt.Net.BCrypt.Verify(request.Password, user.Password))
+            if (user != null && !string.IsNullOrWhiteSpace(user.Password))
             {
-                _logger.LogInformation("Successful authentication for user: {Username}", request.Username);
-                
-                // SECURE: Don't return password in response
-                user.Password = string.Empty;
-                return user;
+                try
+                {
+                    _logger.LogDebug("Attempting to verify password for user: {Username}, Hash length: {Length}, Hash prefix: {Prefix}", 
+                        request.Username, user.Password.Length, user.Password.Substring(0, Math.Min(10, user.Password.Length)));
+                    
+                    if (BCrypt.Net.BCrypt.Verify(request.Password, user.Password))
+                    {
+                        _logger.LogInformation("Successful authentication for user: {Username}", request.Username);
+                        
+                        // SECURE: Don't return password in response
+                        user.Password = string.Empty;
+                        return user;
+                    }
+                }
+                catch (BCrypt.Net.SaltParseException ex)
+                {
+                    _logger.LogError(ex, "Invalid BCrypt hash for user: {Username}. Hash: {Hash}", request.Username, user.Password);
+                    return null;
+                }
             }
             
             // SECURE: Log failed attempts for monitoring
@@ -59,8 +73,8 @@ public class UserService : IUserService
                 throw new InvalidOperationException("Email already exists");
             }
 
-            // SECURE: Hash password with BCrypt
-            var hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.Password, BCrypt.Net.BCrypt.GenerateSalt(12));
+            // SECURE: Hash password with BCrypt (work factor 12)
+            var hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.Password, 12);
             
             var userId = await _userRepository.CreateUserAsync(request, hashedPassword);
             
