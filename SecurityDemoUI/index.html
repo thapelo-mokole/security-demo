@@ -35,6 +35,8 @@
         .result-warning { background: #fff3cd; border: 1px solid #ffeaa7; color: #856404; }
         .vulnerability-badge { display: inline-block; background: #ff4444; color: white; padding: 0.25rem 0.5rem; border-radius: 3px; font-size: 0.75rem; margin-left: 0.5rem; }
         .protection-badge { display: inline-block; background: #00C851; color: white; padding: 0.25rem 0.5rem; border-radius: 3px; font-size: 0.75rem; margin-left: 0.5rem; }
+        .password-toggle { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; user-select: none; color: #667eea; font-size: 0.9rem; }
+        .password-wrapper { position: relative; }
         .code-block { background: #2d2d2d; color: #f8f8f2; padding: 1rem; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 0.85rem; overflow-x: auto; margin-top: 0.5rem; }
         .info-box { background: #e7f3ff; border-left: 4px solid #2196F3; padding: 1rem; margin-top: 1rem; border-radius: 4px; }
         .token-display { background: #f8f9fa; padding: 0.5rem; border-radius: 4px; word-break: break-all; font-size: 0.8rem; margin-top: 0.5rem; }
@@ -57,13 +59,17 @@
                     <!-- SQL Injection Test -->
                     <div class="test-section">
                         <div class="test-title">1. SQL Injection Attack <span class="vulnerability-badge">VULNERABLE</span></div>
+                        <p style="margin-bottom: 1rem; color: #666;">Attackers manipulate SQL queries by injecting malicious code through user inputs, potentially accessing, modifying, or deleting database data.</p>
                         <div class="form-group">
                             <label>Username (Try: admin' OR '1'='1)</label>
                             <input type="text" id="insecure-sql-username" value="admin' OR '1'='1">
                         </div>
                         <div class="form-group">
                             <label>Password</label>
-                            <input type="password" id="insecure-sql-password" value="password123">
+                            <div class="password-wrapper">
+                                <input type="password" id="insecure-sql-password" value="password123">
+                                <span class="password-toggle" onclick="togglePassword('insecure-sql-password')">👁️</span>
+                            </div>
                         </div>
                         <button onclick="testInsecureSQLInjection()">Test SQL Injection</button>
                         <div id="insecure-sql-result"></div>
@@ -76,6 +82,7 @@
                     <!-- No Authentication -->
                     <div class="test-section">
                         <div class="test-title">2. No Authentication <span class="vulnerability-badge">VULNERABLE</span></div>
+                        <p style="margin-bottom: 1rem; color: #666;">API endpoints are publicly accessible without requiring users to prove their identity, allowing anyone to access sensitive operations and data.</p>
                         <button onclick="testInsecureNoAuth()">Access All Users (No Auth Required)</button>
                         <div id="insecure-noauth-result"></div>
                         <div class="info-box">
@@ -86,6 +93,7 @@
                     <!-- Plaintext Passwords -->
                     <div class="test-section">
                         <div class="test-title">3. Plaintext Password Storage <span class="vulnerability-badge">VULNERABLE</span></div>
+                        <p style="margin-bottom: 1rem; color: #666;">Passwords are stored in readable text format in the database. If the database is compromised, all user credentials are immediately exposed.</p>
                         <div class="form-group">
                             <label>Username</label>
                             <input type="text" id="insecure-register-username" value="testuser123">
@@ -96,7 +104,10 @@
                         </div>
                         <div class="form-group">
                             <label>Password</label>
-                            <input type="password" id="insecure-register-password" value="password123">
+                            <div class="password-wrapper">
+                                <input type="password" id="insecure-register-password" value="password123">
+                                <span class="password-toggle" onclick="togglePassword('insecure-register-password')">👁️</span>
+                            </div>
                         </div>
                         <button onclick="testInsecureRegister()">Register User</button>
                         <div id="insecure-register-result"></div>
@@ -108,6 +119,7 @@
                     <!-- Information Disclosure -->
                     <div class="test-section">
                         <div class="test-title">4. Information Disclosure <span class="vulnerability-badge">VULNERABLE</span></div>
+                        <p style="margin-bottom: 1rem; color: #666;">Detailed error messages, stack traces, and internal system information are exposed to users, revealing architecture details that attackers can exploit.</p>
                         <button onclick="testInsecureSensitiveData()">Access Sensitive Data (No Auth)</button>
                         <div id="insecure-sensitive-result"></div>
                         <div class="info-box">
@@ -126,13 +138,17 @@
                     <!-- SQL Injection Protection -->
                     <div class="test-section">
                         <div class="test-title">1. SQL Injection Protection <span class="protection-badge">PROTECTED</span></div>
+                        <p style="margin-bottom: 1rem; color: #666;">Parameterized queries separate SQL code from user data, treating all inputs as literal values rather than executable code, preventing injection attacks.</p>
                         <div class="form-group">
                             <label>Username (Try: admin' OR '1'='1)</label>
                             <input type="text" id="secure-sql-username" value="secureadmin' OR '1'='1">
                         </div>
                         <div class="form-group">
                             <label>Password</label>
-                            <input type="password" id="secure-sql-password" value="anything">
+                            <div class="password-wrapper">
+                                <input type="password" id="secure-sql-password" value="anything">
+                                <span class="password-toggle" onclick="togglePassword('secure-sql-password')">👁️</span>
+                            </div>
                         </div>
                         <button onclick="testSecureSQLInjection()">Test SQL Injection (Will Fail)</button>
                         <div id="secure-sql-result"></div>
@@ -145,13 +161,17 @@
                     <!-- JWT Authentication -->
                     <div class="test-section">
                         <div class="test-title">2. JWT Authentication <span class="protection-badge">PROTECTED</span></div>
+                        <p style="margin-bottom: 1rem; color: #666;">JSON Web Tokens provide stateless authentication. Users receive a cryptographically signed token after login that must be included in subsequent requests.</p>
                         <div class="form-group">
                             <label>Username</label>
                             <input type="text" id="secure-login-username" value="secureuser">
                         </div>
                         <div class="form-group">
                             <label>Password</label>
-                            <input type="password" id="secure-login-password" value="password123">
+                            <div class="password-wrapper">
+                                <input type="password" id="secure-login-password" value="password123">
+                                <span class="password-toggle" onclick="togglePassword('secure-login-password')">👁️</span>
+                            </div>
                         </div>
                         <button onclick="testSecureLogin()">Login & Get JWT Token</button>
                         <div id="secure-login-result"></div>
@@ -163,6 +183,7 @@
                     <!-- Password Hashing -->
                     <div class="test-section">
                         <div class="test-title">3. BCrypt Password Hashing <span class="protection-badge">PROTECTED</span></div>
+                        <p style="margin-bottom: 1rem; color: #666;">BCrypt is a one-way cryptographic hash function with built-in salt. Even if the database is breached, passwords cannot be reversed to plaintext.</p>
                         <div class="form-group">
                             <label>Username</label>
                             <input type="text" id="secure-register-username" value="secureuser456">
@@ -173,7 +194,10 @@
                         </div>
                         <div class="form-group">
                             <label>Password (min 8 chars, uppercase, lowercase, digit, special)</label>
-                            <input type="password" id="secure-register-password" value="SecurePass123!">
+                            <div class="password-wrapper">
+                                <input type="password" id="secure-register-password" value="SecurePass123!">
+                                <span class="password-toggle" onclick="togglePassword('secure-register-password')">👁️</span>
+                            </div>
                         </div>
                         <button onclick="testSecureRegister()">Register User</button>
                         <div id="secure-register-result"></div>
@@ -185,6 +209,7 @@
                     <!-- Authorization -->
                     <div class="test-section">
                         <div class="test-title">4. Authorization & Access Control <span class="protection-badge">PROTECTED</span></div>
+                        <p style="margin-bottom: 1rem; color: #666;">Role-Based Access Control (RBAC) ensures users can only access resources they're authorized for. Admin endpoints require admin role, users can only access their own data.</p>
                         <button onclick="testSecureNoAuth()">Try Access Without Token (Will Fail)</button>
                         <button onclick="testSecureWithAuth()" style="margin-left: 0.5rem;">Access With Valid Token</button>
                         <div id="secure-auth-result"></div>
@@ -201,6 +226,12 @@
         let secureToken = '';
         const INSECURE_API = 'https://localhost:5001/api';
         const SECURE_API = 'https://localhost:5002/api';
+
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            const type = input.type === 'password' ? 'text' : 'password';
+            input.type = type;
+        }
 
         function showResult(elementId, message, type) {
             const element = document.getElementById(elementId);
